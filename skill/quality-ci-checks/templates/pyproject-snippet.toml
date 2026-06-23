@@ -1,0 +1,48 @@
+# Merge these sections into the target project's pyproject.toml.
+# Adjust pythonVersion / target-version to match requires-python.
+
+[project.optional-dependencies]
+dev = [
+	"basedpyright>=1.29",
+	"ruff",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.format]
+indent-style = "tab"
+
+[tool.ruff.lint]
+select = ["F", "I", "E", "S", "B"]
+fixable = ["ALL"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/**" = ["S603", "S607"]
+"tests/**" = ["S101"]
+
+[tool.basedpyright]
+typeCheckingMode = "strict"
+include = ["src", "tests"]
+pythonVersion = "3.11"
+venvPath = "."
+venv = ".venv"
+extraPaths = ["src"]
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+reportUnknownLambdaType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+reportUnknownParameterType = false
+reportAttributeAccessIssue = false
+executionEnvironments = [
+	{ root = "src" },
+	{ root = "tests", extraPaths = ["src"] },
+]

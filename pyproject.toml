@@ -1,0 +1,57 @@
+[project]
+name = "quality-ci-checks-skill"
+version = "0.1.0"
+description = "Cursor skill and templates for Python quality gates (Ruff, ShellCheck, basedpyright, Gitleaks, Dependabot)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Daniel Illescas Romero" }]
+
+[project.optional-dependencies]
+dev = [
+	"basedpyright>=1.29",
+	"ruff",
+]
+
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = []
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["scripts/quality/internal"]
+
+[tool.ruff.format]
+indent-style = "tab"
+
+[tool.ruff.lint]
+select = ["F", "I", "E", "S", "B"]
+fixable = ["ALL"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/**" = ["S603", "S607"]
+
+[tool.basedpyright]
+typeCheckingMode = "strict"
+include = ["scripts/quality/internal"]
+pythonVersion = "3.11"
+venvPath = "."
+venv = ".venv"
+extraPaths = ["scripts/quality/internal"]
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+reportUnknownLambdaType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+reportUnknownParameterType = false
+reportAttributeAccessIssue = false
+executionEnvironments = [{ root = "scripts/quality/internal" }]
