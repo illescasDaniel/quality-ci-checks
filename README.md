@@ -1,8 +1,17 @@
 # quality-ci-checks-skill
 
-Cursor skill and templates for Python **quality gates**: Ruff (tabs), ShellCheck + shfmt, basedpyright, Gitleaks, and Dependabot.
+Cursor skill and templates for Python **quality gates**: Ruff (tabs), ShellCheck + shfmt, basedpyright, pip-audit, Gitleaks, and Dependabot.
 
-Dogfoods its own `scripts/quality/checks.sh` in CI.
+This repo is the skill source — not a Python application. Scaffold the gate into a target project to use it.
+
+## Development (this repo)
+
+```bash
+./checks.sh --fix
+./checks.sh
+```
+
+Lints all `*.sh` files with shfmt and shellcheck. See [AGENTS.md](AGENTS.md).
 
 ## Install the skill
 
@@ -12,7 +21,7 @@ cd quality-ci-checks-skill
 bash skill/quality-ci-checks/scripts/install.sh
 ```
 
-Copies the skill to `~/.cursor/skills/quality-ci-checks` and records the clone path for scaffold.
+Copies the self-contained skill to `~/.cursor/skills/quality-ci-checks`.
 
 ## Scaffold into a Python project
 
@@ -26,7 +35,11 @@ bash ~/.cursor/skills/quality-ci-checks/scripts/scaffold.sh /path/to/your-projec
 
 Then merge tool sections from [`skill/quality-ci-checks/templates/pyproject-snippet.toml`](skill/quality-ci-checks/templates/pyproject-snippet.toml) into the target `pyproject.toml`.
 
-## Quality gate
+Optional: [`templates/vscode-tasks.json`](skill/quality-ci-checks/templates/vscode-tasks.json) for VS Code — copy manually if wanted; commit or gitignore `.vscode/` per team preference.
+
+## Quality gate (target projects)
+
+After scaffolding:
 
 ```bash
 python -m venv .venv
@@ -41,27 +54,32 @@ pip install -e ".[dev]"
 | 1 | Ruff lint + format (tabs) on `src/` and `tests/` |
 | 2 | ShellCheck + shfmt |
 | 3 | basedpyright (strict) on `src/` and `tests/` |
+| 4 | pip-audit (dependency CVE scan) |
+| 5 | pytest + coverage (when the project uses pytest) |
 
-## CI
+## CI (this repo)
 
-- **`.github/workflows/ci.yml`** — runs `checks.sh` on push/PR
+- **`.github/workflows/ci.yml`** — validates skill layout and runs `./checks.sh`
 - **`.github/workflows/gitleaks.yml`** — secret scanning
-- **`.github/dependabot.yml`** — weekly pip and GitHub Actions updates
+- **`.github/dependabot.yml`** — weekly GitHub Actions updates
 
 ## Structure
 
 ```
 quality-ci-checks-skill/
-├── scripts/quality/              # quality gate (copied by scaffold)
-├── skill/quality-ci-checks/      # Cursor skill
+├── AGENTS.md
+├── checks.sh                   # shell lint for this repo
+├── skill/quality-ci-checks/    # Cursor skill (self-contained)
 │   ├── SKILL.md
 │   ├── reference.md
+│   ├── quality/                # gate scripts (copied by scaffold)
 │   ├── templates/
-│   │   └── pyproject-snippet.toml
+│   │   ├── pyproject-snippet.toml
+│   │   ├── vscode-tasks.json
+│   │   └── github/
 │   └── scripts/
 │       ├── install.sh
-│       ├── scaffold.sh
-│       └── repo.sh
+│       └── scaffold.sh
 └── .github/workflows/
 ```
 

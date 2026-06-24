@@ -2,14 +2,15 @@
 name: quality-ci-checks
 description: >-
   Set up Python quality gates with Ruff (tabs), ShellCheck, shfmt, basedpyright,
-  Gitleaks, and Dependabot. Use when adding checks.sh, CI workflows, linting,
-  type checking, secret scanning, or when the user mentions quality gate, ruff,
-  basedpyright, shellcheck, gitleaks, or dependabot for Python projects.
+  pip-audit, Gitleaks, and Dependabot. Use when adding checks.sh, CI workflows,
+  linting, type checking, dependency audit, secret scanning, or when the user
+  mentions quality gate, ruff, basedpyright, shellcheck, pip-audit, gitleaks,
+  or dependabot for Python projects.
 ---
 
 # quality-ci-checks
 
-Scaffold and maintain a Python quality gate: **Ruff** → **ShellCheck + shfmt** → **basedpyright**, plus **Gitleaks** and **Dependabot** in CI.
+Scaffold and maintain a Python quality gate: **Ruff** → **ShellCheck + shfmt** → **basedpyright** → **pip-audit**, plus **pytest** when the project has tests, and **Gitleaks** and **Dependabot** in CI.
 
 ## Prerequisites
 
@@ -19,7 +20,7 @@ Clone this repo and install the skill:
 bash skill/quality-ci-checks/scripts/install.sh
 ```
 
-Install records the clone path so scaffold works from `~/.cursor/skills/quality-ci-checks` afterward. Override with `QUALITY_CI_CHECKS_REPO` if needed.
+Install copies the skill to `~/.cursor/skills/quality-ci-checks`. Scaffold and install scripts resolve paths from the skill directory itself — no clone path or repo root required.
 
 ## When to use
 
@@ -37,14 +38,19 @@ bash skill/quality-ci-checks/scripts/scaffold.sh /path/to/python-project
 bash ~/.cursor/skills/quality-ci-checks/scripts/scaffold.sh /path/to/python-project
 ```
 
-This copies:
+This copies from the skill bundle:
 
-- `scripts/quality/` (checks.sh, ruff, shellcheck, pyright, gate helpers)
+- `quality/` → `scripts/quality/` (checks.sh, ruff, shellcheck, pyright, pytest, pip-audit, gate helpers)
 - `.github/workflows/ci.yml` and `gitleaks.yml` (if missing)
 - `.github/dependabot.yml` (if missing)
-- `.vscode/tasks.json` (if missing)
+
+`checks.sh` automatically runs the pytest step when the target project uses pytest (see below).
 
 Then **merge** `[tool.ruff]`, `[tool.basedpyright]`, and `[project.optional-dependencies].dev` from [templates/pyproject-snippet.toml](templates/pyproject-snippet.toml). Match `pythonVersion` / `target-version` to the project's `requires-python`.
+
+### Optional VS Code tasks
+
+A sample [templates/vscode-tasks.json](templates/vscode-tasks.json) is available. **Do not** copy or gitignore it automatically — let the developer decide whether to use, commit, or ignore `.vscode/`.
 
 ## Quality gate steps
 
@@ -53,13 +59,15 @@ Then **merge** `[tool.ruff]`, `[tool.basedpyright]`, and `[project.optional-depe
 | 1 | Ruff | Lint (`F`, `I`, `E`, `S`, `B`) + format (tabs, line-length 120) on `src/` and `tests/` |
 | 2 | Shell | shfmt + ShellCheck on all `*.sh` |
 | 3 | basedpyright | Strict type check on `src/` and `tests/` |
+| 4 | pip-audit | Dependency CVE scan on the project venv |
+| 5 | pytest | Unit tests + coverage (when the project uses pytest) |
 
 ```bash
 ./scripts/quality/checks.sh --fix   # local autofix (ignored in CI)
 ./scripts/quality/checks.sh         # verify clean
 ```
 
-`lib_ruff_targets` in `scripts/quality/internal/lib.sh` uses `src/` and `tests/` when present, else `scripts/quality/internal` (for tool-only repos).
+`lib_ruff_targets` in `quality/internal/lib.sh` uses `src/` and `tests/` when present, else the bundled `internal/` directory (for tool-only repos).
 
 ## CI workflows
 
@@ -93,6 +101,7 @@ Adjust `python-version` in `ci.yml` to match the target project.
 - Commit secrets (Gitleaks will flag them)
 - Skip merging pyproject tool sections after scaffold
 - Use `--fix` in CI (`CI=true` ignores it)
+- Automatically copy `.vscode/tasks.json` or modify `.gitignore` for `.vscode/` — that is each developer's choice
 
 ## Additional resources
 

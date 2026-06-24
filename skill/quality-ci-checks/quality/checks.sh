@@ -2,16 +2,17 @@
 
 set -u
 
-# Quality gate — ruff, shell, basedpyright.
+# Quality gate — ruff, shell, basedpyright, pip-audit, and optionally pytest.
 # --fix: ruff autofix+format and shfmt write; ignored when CI=true.
 
 quality_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 internal_dir="${quality_dir}/internal"
-scripts_dir="$(cd "${quality_dir}/.." && pwd)"
-repo_root="$(cd "${scripts_dir}/.." && pwd)"
 
-# shellcheck source=scripts/quality/internal/gate.sh
+# shellcheck source=internal/gate.sh
 source "${internal_dir}/gate.sh"
+
+# shellcheck source=internal/lib.sh
+source "${internal_dir}/lib.sh"
 
 FIX=false
 for arg in "$@"; do
@@ -27,14 +28,15 @@ if [[ "${CI:-}" == "true" && "${FIX}" == true ]]; then
 	FIX=false
 fi
 
-GATE_PLANNED_STEPS=3
+GATE_PLANNED_STEPS=4
+if lib_has_pytest_tests "${LIB_REPO_ROOT}"; then
+	# shellcheck disable=SC2034
+	GATE_PLANNED_STEPS=5
+fi
 gate_init
-
-# shellcheck source=scripts/quality/internal/lib.sh
-source "${internal_dir}/lib.sh"
 lib_require_venv
 PYTHON="${LIB_REPO_ROOT}/.venv/bin/python"
-cd "${repo_root}" || exit
+cd "${LIB_REPO_ROOT}" || exit
 
 set +e
 
@@ -131,6 +133,34 @@ else
 	else
 		gate_gha_error "" "" "" "basedpyright" "type check failed (exit ${pyright_exit})"
 		gate_record_fail 1 0
+	fi
+fi
+
+# --- 4. pip-audit ---
+gate_step_start "pip-audit"
+audit_output="$("${internal_dir}/audit_deps.sh" 2>&1)"
+audit_exit=$?
+printf '%s\n' "${audit_output}"
+if [[ "${audit_exit}" -eq 0 ]]; then
+	gate_record_pass
+else
+	gate_gha_error "" "" "" "pip-audit" "dependency audit failed (exit ${audit_exit})"
+	gate_record_fail 1 0
+	gate_add_detail "[pip-audit] exit ${audit_exit}"
+fi
+
+# --- 5. pytest (when project uses pytest) ---
+if lib_has_pytest_tests "${LIB_REPO_ROOT}"; then
+	gate_step_start "pytest"
+	pytest_output="$("${quality_dir}/pytest.sh" 2>&1)"
+	pytest_exit=$?
+	printf '%s\n' "${pytest_output}"
+	if [[ "${pytest_exit}" -eq 0 ]]; then
+		gate_record_pass
+	else
+		gate_gha_error "" "" "" "pytest" "tests failed (exit ${pytest_exit})"
+		gate_record_fail 1 0
+		gate_add_detail "[pytest] exit ${pytest_exit}"
 	fi
 fi
 

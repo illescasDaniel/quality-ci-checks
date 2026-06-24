@@ -3,10 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-# shellcheck source=skill/quality-ci-checks/scripts/repo.sh
-source "${SCRIPT_DIR}/repo.sh"
-
-REPO="$(quality_ci_checks_repo_or_die "${SCRIPT_DIR}")"
+QUALITY_SRC="${SKILL_ROOT}/quality"
+GITHUB_SRC="${SKILL_ROOT}/templates/github"
 TEMPLATE="${SKILL_ROOT}/templates/pyproject-snippet.toml"
 
 TARGET="${1:-.}"
@@ -17,10 +15,21 @@ if [[ ! -f "${TARGET}/pyproject.toml" ]]; then
 	exit 1
 fi
 
+if [[ ! -d "${QUALITY_SRC}" ]]; then
+	echo "Missing quality gate bundle: ${QUALITY_SRC}" >&2
+	exit 1
+fi
+
 if [[ ! -f "${TEMPLATE}" ]]; then
 	echo "Missing template: ${TEMPLATE}" >&2
 	exit 1
 fi
+
+has_pytest_tests() {
+	# shellcheck source=quality/internal/lib.sh
+	source "${QUALITY_SRC}/internal/lib.sh"
+	lib_has_pytest_tests "$1"
+}
 
 echo "Scaffolding quality gate into: ${TARGET}"
 
@@ -36,14 +45,14 @@ copy_if_missing() {
 	fi
 }
 
+mkdir -p "${TARGET}/scripts"
 rm -rf "${TARGET}/scripts/quality"
-cp -r "${REPO}/scripts/quality" "${TARGET}/scripts/"
+cp -r "${QUALITY_SRC}" "${TARGET}/scripts/quality"
 echo "  replaced: ${TARGET}/scripts/quality/"
 
-copy_if_missing "${REPO}/.github/workflows/ci.yml" "${TARGET}/.github/workflows/ci.yml"
-copy_if_missing "${REPO}/.github/workflows/gitleaks.yml" "${TARGET}/.github/workflows/gitleaks.yml"
-copy_if_missing "${REPO}/.github/dependabot.yml" "${TARGET}/.github/dependabot.yml"
-copy_if_missing "${REPO}/.vscode/tasks.json" "${TARGET}/.vscode/tasks.json"
+copy_if_missing "${GITHUB_SRC}/workflows/ci.yml" "${TARGET}/.github/workflows/ci.yml"
+copy_if_missing "${GITHUB_SRC}/workflows/gitleaks.yml" "${TARGET}/.github/workflows/gitleaks.yml"
+copy_if_missing "${GITHUB_SRC}/dependabot.yml" "${TARGET}/.github/dependabot.yml"
 
 if ! grep -q '\.ruff_cache/' "${TARGET}/.gitignore" 2>/dev/null; then
 	{
@@ -55,9 +64,23 @@ if ! grep -q '\.ruff_cache/' "${TARGET}/.gitignore" 2>/dev/null; then
 	echo "  appended quality caches to .gitignore"
 fi
 
+if ! grep -q '^\.coverage$' "${TARGET}/.gitignore" 2>/dev/null; then
+	{
+		echo ".coverage"
+		echo "htmlcov/"
+	} >>"${TARGET}/.gitignore"
+	echo "  appended coverage artifacts to .gitignore"
+fi
+
 echo
 echo "Next steps:"
 echo "  1. Merge tool sections from: ${TEMPLATE}"
+if has_pytest_tests "${TARGET}"; then
+	echo "     (include pytest + pytest-cov in [project.optional-dependencies].dev)"
+fi
 echo "  2. python -m venv .venv && pip install -e \".[dev]\""
 echo "  3. ./scripts/quality/checks.sh --fix"
 echo "  4. ./scripts/quality/checks.sh"
+echo
+echo "Optional: copy ${SKILL_ROOT}/templates/vscode-tasks.json to .vscode/tasks.json"
+echo "  (editor config is up to each developer — commit or gitignore as you prefer)"

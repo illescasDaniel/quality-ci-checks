@@ -4,7 +4,11 @@
 [project.optional-dependencies]
 dev = [
 	"basedpyright>=1.29",
+	"pip-audit",
 	"ruff",
+	# When scaffold detects pytest tests, also add:
+	# "pytest",
+	# "pytest-cov",
 ]
 
 [tool.ruff]
