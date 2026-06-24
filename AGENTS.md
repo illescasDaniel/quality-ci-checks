@@ -21,6 +21,8 @@ Repeat until `./checks.sh` exits cleanly with no issues.
 
 `shellcheck` and `shfmt` must be on `PATH` (e.g. `pacman -S shellcheck shfmt`).
 
+Node.js with `npx` is required for `./checks.sh` skill discovery dry-run (agent-install `-l`).
+
 ## Scaffold target
 
 The full Python quality gate (`ruff`, `basedpyright`, `pip-audit`, optional `pytest`) lives in `skill/quality-ci-checks/quality/` and is copied into **target Python projects** via `skill/quality-ci-checks/scripts/scaffold.sh`. Do not run that gate against this skill repo.

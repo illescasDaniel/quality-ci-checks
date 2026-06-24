@@ -1,35 +1,48 @@
 # quality-ci-checks-skill
 
-Cursor skill and templates for Python **quality gates**: Ruff (tabs), ShellCheck + shfmt, basedpyright, pip-audit, Gitleaks, and Dependabot.
+AI agent skill and templates for Python **quality gates**: Ruff (tabs), ShellCheck + shfmt, basedpyright, pip-audit, Gitleaks, and Dependabot.
 
-This repo is the skill source — not a Python application. Scaffold the gate into a target project to use it.
-
-## Development (this repo)
-
-```bash
-./checks.sh --fix
-./checks.sh
-```
-
-Lints all `*.sh` files with shfmt and shellcheck. See [AGENTS.md](AGENTS.md).
+This repo is the skill source — not a Python application. Install it into your coding agent, then use it to scaffold the gate into a target Python project.
 
 ## Install the skill
 
+No clone required — installs globally via [agent-install](https://github.com/millionco/agent-install) (Cursor, Claude Code, Codex, and other supported agents):
+
 ```bash
-git clone https://github.com/illescasDaniel/quality-ci-checks-skill.git
-cd quality-ci-checks-skill
-bash skill/quality-ci-checks/scripts/install.sh
+# All supported agents
+npx agent-install@latest skill add illescasDaniel/quality-ci-checks/skill/quality-ci-checks -g -y -a '*'
+
+# Cursor
+npx agent-install@latest skill add illescasDaniel/quality-ci-checks/skill/quality-ci-checks -g -y -a cursor
+
+# Claude Code
+npx agent-install@latest skill add illescasDaniel/quality-ci-checks/skill/quality-ci-checks -g -y -a claude-code
 ```
 
-Copies the self-contained skill to `~/.cursor/skills/quality-ci-checks`.
+From a local clone while iterating:
+
+```bash
+npx agent-install@latest skill add ./skill/quality-ci-checks -g -y -a '*'
+```
+
+Upgrade — re-run the same install command.
+
+### Uninstall
+
+```bash
+npx agent-install@latest skill remove quality-ci-checks -g -y -a '*'
+npx agent-install@latest skill list -g
+```
 
 ## Scaffold into a Python project
 
-From the clone or the installed skill:
+**Recommended:** with the skill installed, ask your AI agent to set up the quality gate on your project (e.g. “add the quality-ci-checks gate to this repo”). The agent follows [SKILL.md](skill/quality-ci-checks/SKILL.md), runs scaffold, merges `pyproject.toml` sections, and tailors tool config — usually better than copying files by hand.
+
+**Manual:** you can run scaffold yourself from a clone or the installed skill path:
 
 ```bash
 bash skill/quality-ci-checks/scripts/scaffold.sh /path/to/your-project
-# or:
+# or, after install (path varies by agent; e.g. Cursor):
 bash ~/.cursor/skills/quality-ci-checks/scripts/scaffold.sh /path/to/your-project
 ```
 
@@ -68,8 +81,8 @@ pip install -e ".[dev]"
 ```
 quality-ci-checks-skill/
 ├── AGENTS.md
-├── checks.sh                   # shell lint for this repo
-├── skill/quality-ci-checks/    # Cursor skill (self-contained)
+├── checks.sh                   # shell lint + skill discovery for this repo
+├── skill/quality-ci-checks/    # agent skill bundle (self-contained)
 │   ├── SKILL.md
 │   ├── reference.md
 │   ├── quality/                # gate scripts (copied by scaffold)
@@ -78,10 +91,20 @@ quality-ci-checks-skill/
 │   │   ├── vscode-tasks.json
 │   │   └── github/
 │   └── scripts/
-│       ├── install.sh
 │       └── scaffold.sh
 └── .github/workflows/
 ```
+
+## Development (this repo)
+
+```bash
+./checks.sh --fix
+./checks.sh
+```
+
+Lints all `*.sh` files with shfmt and shellcheck, and dry-runs [agent-install](https://github.com/millionco/agent-install) skill discovery. See [AGENTS.md](AGENTS.md).
+
+Requires Node.js with `npx` for the skill discovery step.
 
 ## License
 

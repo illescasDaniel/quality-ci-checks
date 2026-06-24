@@ -12,7 +12,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Validate skill layout
         run: |
@@ -20,8 +20,11 @@ jobs:
           test -f skill/quality-ci-checks/reference.md
           test -x skill/quality-ci-checks/quality/checks.sh
           test -f skill/quality-ci-checks/scripts/scaffold.sh
-          test -f skill/quality-ci-checks/scripts/install.sh
           test -f skill/quality-ci-checks/templates/pyproject-snippet.toml
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
       - name: Install shell lint tools
         run: |

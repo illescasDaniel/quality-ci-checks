@@ -26,7 +26,6 @@ skill/quality-ci-checks/
 │           ├── ci.yml
 │           └── gitleaks.yml
 └── scripts/
-    ├── install.sh
     └── scaffold.sh
 ```
 

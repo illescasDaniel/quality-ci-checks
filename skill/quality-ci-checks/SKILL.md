@@ -14,13 +14,13 @@ Scaffold and maintain a Python quality gate: **Ruff** → **ShellCheck + shfmt**
 
 ## Prerequisites
 
-Clone this repo and install the skill:
+Install the skill globally (no clone required):
 
 ```bash
-bash skill/quality-ci-checks/scripts/install.sh
+npx agent-install@latest skill add illescasDaniel/quality-ci-checks/skill/quality-ci-checks -g -y -a cursor
 ```
 
-Install copies the skill to `~/.cursor/skills/quality-ci-checks`. Scaffold and install scripts resolve paths from the skill directory itself — no clone path or repo root required.
+Scaffold and other scripts resolve paths from the skill directory itself — no clone path or repo root required.
 
 ## When to use
 
