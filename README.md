@@ -68,7 +68,8 @@ pip install -e ".[dev]"
 | 2 | ShellCheck + shfmt |
 | 3 | basedpyright (strict) on `src/` and `tests/` |
 | 4 | pip-audit (dependency CVE scan) |
-| 5 | pytest + coverage (when the project uses pytest) |
+| 5 | build (PEP 517 wheel via `pip wheel --no-deps`) |
+| 6 | pytest + coverage (when the project uses pytest) |
 
 ## CI (this repo)
 

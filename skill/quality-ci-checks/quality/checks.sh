@@ -2,7 +2,7 @@
 
 set -u
 
-# Quality gate — ruff, shell, basedpyright, pip-audit, and optionally pytest.
+# Quality gate — ruff, shell, basedpyright, pip-audit, build, and optionally pytest.
 # --fix: ruff autofix+format and shfmt write; ignored when CI=true.
 
 quality_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,10 +28,10 @@ if [[ "${CI:-}" == "true" && "${FIX}" == true ]]; then
 	FIX=false
 fi
 
-GATE_PLANNED_STEPS=4
+GATE_PLANNED_STEPS=5
 if lib_has_pytest_tests "${LIB_REPO_ROOT}"; then
 	# shellcheck disable=SC2034
-	GATE_PLANNED_STEPS=5
+	GATE_PLANNED_STEPS=6
 fi
 gate_init
 lib_require_venv
@@ -149,7 +149,20 @@ else
 	gate_add_detail "[pip-audit] exit ${audit_exit}"
 fi
 
-# --- 5. pytest (when project uses pytest) ---
+# --- 5. build ---
+gate_step_start "build"
+build_output="$("${quality_dir}/build.sh" 2>&1)"
+build_exit=$?
+printf '%s\n' "${build_output}"
+if [[ "${build_exit}" -eq 0 ]]; then
+	gate_record_pass
+else
+	gate_gha_error "" "" "" "build" "package build failed (exit ${build_exit})"
+	gate_record_fail 1 0
+	gate_add_detail "[build] exit ${build_exit}"
+fi
+
+# --- 6. pytest (when project uses pytest) ---
 if lib_has_pytest_tests "${LIB_REPO_ROOT}"; then
 	gate_step_start "pytest"
 	pytest_output="$("${quality_dir}/pytest.sh" 2>&1)"

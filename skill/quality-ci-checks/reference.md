@@ -11,6 +11,7 @@ skill/quality-ci-checks/
 │   ├── ruff.sh
 │   ├── shellcheck.sh
 │   ├── pyright.sh
+│   ├── build.sh
 │   ├── pytest.sh
 │   └── internal/
 │       ├── audit_deps.sh
@@ -45,6 +46,7 @@ project/
 │   ├── ruff.sh
 │   ├── shellcheck.sh
 │   ├── pyright.sh
+│   ├── build.sh
 │   ├── pytest.sh
 │   └── internal/
 ├── src/                    # Ruff + basedpyright target
@@ -57,12 +59,13 @@ project/
 - `gate_emit.py` parses Ruff `--output-format=github` and basedpyright `--outputjson`
 - `--fix` runs Ruff autofix/format and `shfmt -w`; disabled when `CI=true`
 - Step 4 always runs `internal/audit_deps.sh` (pip-audit)
-- Step 5 runs `pytest.sh` when `lib_has_pytest_tests` detects pytest usage
+- Step 5 runs `build.sh` (`pip wheel --no-deps` into a temp directory)
+- Step 6 runs `pytest.sh` when `lib_has_pytest_tests` detects pytest usage
 - `lib.sh` finds the project root by walking up to `pyproject.toml`
 
 ## Pytest detection
 
-`lib_has_pytest_tests` enables step 5 when any of the following match:
+`lib_has_pytest_tests` enables step 6 when any of the following match:
 
 - `pytest` listed in `pyproject.toml` dependencies
 - `tests/` or `test/` contains `test_*.py`, `*_test.py`, or `conftest.py`

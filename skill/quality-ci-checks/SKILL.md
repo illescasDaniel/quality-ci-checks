@@ -10,7 +10,7 @@ description: >-
 
 # quality-ci-checks
 
-Scaffold and maintain a Python quality gate: **Ruff** → **ShellCheck + shfmt** → **basedpyright** → **pip-audit**, plus **pytest** when the project has tests, and **Gitleaks** and **Dependabot** in CI.
+Scaffold and maintain a Python quality gate: **Ruff** → **ShellCheck + shfmt** → **basedpyright** → **pip-audit** → **build**, plus **pytest** when the project has tests, and **Gitleaks** and **Dependabot** in CI.
 
 ## Prerequisites
 
@@ -40,7 +40,7 @@ bash ~/.cursor/skills/quality-ci-checks/scripts/scaffold.sh /path/to/python-proj
 
 This copies from the skill bundle:
 
-- `quality/` → `scripts/quality/` (checks.sh, ruff, shellcheck, pyright, pytest, pip-audit, gate helpers)
+- `quality/` → `scripts/quality/` (checks.sh, ruff, shellcheck, pyright, build, pytest, pip-audit, gate helpers)
 - `.github/workflows/ci.yml` and `gitleaks.yml` (if missing)
 - `.github/dependabot.yml` (if missing)
 
@@ -60,7 +60,8 @@ A sample [templates/vscode-tasks.json](templates/vscode-tasks.json) is available
 | 2 | Shell | shfmt + ShellCheck on all `*.sh` |
 | 3 | basedpyright | Strict type check on `src/` and `tests/` |
 | 4 | pip-audit | Dependency CVE scan on the project venv |
-| 5 | pytest | Unit tests + coverage (when the project uses pytest) |
+| 5 | build | PEP 517 wheel build via `pip wheel --no-deps` |
+| 6 | pytest | Unit tests + coverage (when the project uses pytest) |
 
 ```bash
 ./scripts/quality/checks.sh --fix   # local autofix (ignored in CI)
