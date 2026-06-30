@@ -22,7 +22,7 @@ jobs:
           test -f skill/quality-ci-checks/scripts/scaffold.sh
           test -f skill/quality-ci-checks/templates/pyproject-snippet.toml
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
 
